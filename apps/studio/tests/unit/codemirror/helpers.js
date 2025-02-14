@@ -1,11 +1,11 @@
 import CodeMirror from "codemirror";
 import "@/vendor/sql-hint/index";
-import "@/lib/codemirror-definition"
+import "../../../src/lib/editor/CodeMirrorDefinitions";
 import {
   registerAutoquote,
-  unregisterAutoquote,
   autoquoteHandler,
-} from "@/lib/codemirror";
+} from "../../../src/lib/editor/CodeMirrorPlugins";
+import _ from 'lodash';
 
 class Editor {
   constructor(opts = {}) {
@@ -26,7 +26,7 @@ class Editor {
       autoquoteHandler(cm, co);
     }
 
-    registerAutoquote(this.cm, mockedBeforeChange);
+    const unregisterAutoquote = registerAutoquote(this.cm, mockedBeforeChange);
 
     const hint = await this.hint();
 
@@ -60,9 +60,9 @@ function _testCompletions(it, name, spec) {
     });
     editor.cm.setCursor(spec.cursor);
     const completions = await editor.hint();
-    expect(spec.list.sort()).toEqual(completions.list.sort());
-    expect(spec.from).toEqual(completions.from);
-    expect(spec.to).toEqual(completions.to);
+    expect(_.sortBy(completions.list, ['text'])).toEqual(_.sortBy(spec.list, ['text']));
+    expect(completions.from).toEqual(spec.from);
+    expect(completions.to).toEqual(spec.to);
     editor.destroy();
   });
 }

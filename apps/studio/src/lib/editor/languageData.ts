@@ -1,11 +1,21 @@
+import CodeMirror from 'codemirror'
+
+// According to the HTML spec, comments end at the forst -->
+// So nested comments aren't a thing.
+function removeHtmlComments(input) {
+  return input.replace(/<!--[\s\S]*?(?:-->)/g, '');
+}
+
 export interface LanguageData {
   isValid: (raw: string) => boolean;
   beautify: (raw: string) => string;
   minify: (beautified: string) => string;
   name: string;
   label: string;
-  editorMode: Record<string, unknown>;
+  editorMode: CodeMirror.EditorConfiguration['mode'];
   wrapTextByDefault?: boolean;
+  noMinify?: boolean;
+  noBeautify?: boolean
 }
 
 export const TextLanguage: LanguageData = {
@@ -18,6 +28,8 @@ export const TextLanguage: LanguageData = {
   beautify: (v) => v,
   minify: (v) => v,
   wrapTextByDefault: true,
+  noMinify: true,
+  noBeautify: true
 }
 
 export const Languages: LanguageData[] = [
@@ -103,9 +115,7 @@ export const Languages: LanguageData[] = [
       return result;
     },
     minify: (value: string) => {
-      return value
-        .replace(/<!--\s*?[^\s?[][\s\S]*?-->/g, "")
-        .replace(/>\s*</g, "><");
+      return removeHtmlComments(value).replace(/>\s*</g, "><");
     },
   },
 ];
@@ -113,8 +123,4 @@ export const Languages: LanguageData[] = [
 export function getLanguageByContent(content: string): LanguageData | undefined {
   const lang = Languages.find((lang) => lang !== TextLanguage && lang.isValid(content));
   return lang ? lang : TextLanguage
-}
-
-export function getLanguageByName(name: string): LanguageData | undefined {
-  return Languages.find((lang) => lang.name === name);
 }
